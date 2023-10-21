@@ -30,7 +30,8 @@ function M.start()
     assert(projects_file):close()
     local project_items = {}
     for _, project in ipairs(projects) do
-        table.insert(project_items, project[1] .. "\t(" .. project[2] .. ")")
+        local spaces = string.rep(" ", 40 - string.len(project[1]))
+        table.insert(project_items, project[1] .. spaces .. "(" .. project[2] .. ")")
     end
     M.pick.ui_select(project_items, {}, function(_, nth)
         if nth == nil then

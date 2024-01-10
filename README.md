@@ -1,4 +1,8 @@
-# PickAProject
+<h1><p align=center>mini.pickaproject</p></h1>
+<h3><p align=center>Project picker for mini.pick</p></h3>
+<br \><br \>
+
+![ProjectPicker](https://user-images.githubusercontent.com/45213563/295500017-629d6a18-29c6-43fd-b151-4d0125472cf1.png)
 
 # Example projects.txt file
 ```plain

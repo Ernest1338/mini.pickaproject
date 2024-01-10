@@ -13,6 +13,59 @@ local function string_split(string, delimiter)
     return result
 end
 
+local function parse_file(file)
+    local flines = {}
+    for line in file:lines() do
+        if string.len(line) ~= 0 then
+            table.insert(flines, line)
+        end
+    end
+    file:close()
+
+    local function parse_block(lines, level)
+        local block_data = {}
+        while #lines > 0 do
+            local line = lines[1]
+            local indent = line:find("[^ ]") - 1
+            if indent < level then
+                break                  -- End of the block
+            elseif indent == level then
+                table.remove(lines, 1) -- Consume the line
+                local ident_data_split = string_split(line, ":")
+                local identifier = ident_data_split[1]
+                local data = ident_data_split[2]
+                identifier = identifier:gsub("%s+", "")
+                if data ~= "" then
+                    block_data[identifier] = { type = "project", data = data }
+                else
+                    -- Start of a new block
+                    block_data[identifier] = { type = "nest", data = parse_block(lines, level + 4) }
+                end
+            else
+                -- Lines are more indented, ignore them as they belong to a nested block
+                table.remove(lines, 1)
+            end
+        end
+        return block_data
+    end
+
+    return parse_block(flines, 0)
+end
+
+local function parse_items(parsed)
+    local names, items = {}, {}
+    for name, project in pairs(parsed) do
+        local spaces = string.rep(" ", 40 - string.len(name))
+        if project["type"] == "project" then
+            table.insert(names, " " .. name .. spaces .. "(" .. project["data"] .. ")")
+        elseif project["type"] == "nest" then
+            table.insert(names, "⛘ " .. name .. spaces)
+        end
+        table.insert(items, project)
+    end
+    return names, items
+end
+
 function M.start()
     local projects_file = io.open(M.projects_file_path)
     if projects_file == nil then
@@ -20,28 +73,27 @@ function M.start()
         assert(io.open(M.projects_file_path, "w")):close()
         projects_file = io.open(M.projects_file_path)
     end
-    local projects = {}
-    for line in assert(projects_file):lines() do
-        local project = string_split(line, ":")
-        if project[1] ~= "" then
-            table.insert(projects, project)
-        end
-    end
-    assert(projects_file):close()
-    local project_items = {}
-    for _, project in ipairs(projects) do
-        local spaces = string.rep(" ", 40 - string.len(project[1]))
-        table.insert(project_items, project[1] .. spaces .. "(" .. project[2] .. ")")
-    end
-    M.pick.ui_select(project_items, {}, function(_, nth)
+
+    local parsed = parse_file(assert(projects_file))
+    local names, items = parse_items(parsed)
+
+    M.pick_handler = function(_, nth)
         if nth == nil then
             return
         end
 
-        local path = projects[nth][2]
-        vim.cmd("cd " .. path)
-        M.pick.builtin.files()
-    end)
+        local project = items[nth]
+        if project["type"] == "project" then
+            local path = project["data"]
+            vim.cmd("cd " .. path)
+            M.pick.builtin.files()
+        elseif project["type"] == "nest" then
+            names, items = parse_items(project["data"])
+            M.pick.ui_select(names, {}, M.pick_handler)
+        end
+    end
+
+    M.pick.ui_select(names, {}, M.pick_handler)
 end
 
 function M.new_project()

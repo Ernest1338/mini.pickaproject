@@ -7,9 +7,11 @@ M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
 
 local function string_split(string, delimiter)
     local result = {}
+
     for match in (string .. delimiter):gmatch("(.-)" .. delimiter) do
         table.insert(result, match)
     end
+
     return result
 end
 
@@ -54,6 +56,7 @@ end
 
 local function parse_items(parsed)
     local names, items = {}, {}
+
     for name, project in pairs(parsed) do
         local spaces = string.rep(" ", 40 - string.len(name))
         if project["type"] == "project" then
@@ -63,6 +66,7 @@ local function parse_items(parsed)
         end
         table.insert(items, project)
     end
+
     return names, items
 end
 
@@ -78,9 +82,7 @@ function M.start()
     local names, items = parse_items(parsed)
 
     M.pick_handler = function(_, nth)
-        if nth == nil then
-            return
-        end
+        if nth == nil then return end
 
         local project = items[nth]
         if project["type"] == "project" then
@@ -103,12 +105,16 @@ function M.new_project()
         assert(io.open(M.projects_file_path, "w")):close()
         projects_file = io.open(M.projects_file_path)
     end
+
     local name = vim.fn.input("Project name: ")
     if name == "" then return end
+
     local path = vim.fn.input("Project path: ")
     if path == "" then return end
+
     assert(projects_file):write(name .. ":" .. path .. "\n")
     assert(projects_file):close()
+
     print("\nProject added succesfully")
 end
 

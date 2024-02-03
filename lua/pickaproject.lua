@@ -98,7 +98,7 @@ function M.start()
     M.pick.ui_select(names, {}, M.pick_handler)
 end
 
-function M.new_project()
+local function add_project(name, path)
     local projects_file = io.open(M.projects_file_path, "a")
     if projects_file == nil then
         -- create the file if it doesn't exist
@@ -106,19 +106,40 @@ function M.new_project()
         projects_file = io.open(M.projects_file_path)
     end
 
+    assert(projects_file):write(name .. ":" .. path .. "\n")
+    assert(projects_file):close()
+end
+
+function M.new_project()
     local name = vim.fn.input("Project name: ")
     if name == "" then return end
 
     local path = vim.fn.input("Project path: ")
     if path == "" then return end
 
-    assert(projects_file):write(name .. ":" .. path .. "\n")
-    assert(projects_file):close()
+    add_project(name, path)
 
-    print("\nProject added succesfully")
+    print("\nProject '" .. name .. "' added succesfully")
+end
+
+function M.new_project_cwd(proj_name)
+    local path = vim.fn.getcwd()
+    local name = path:match("([^/]+)$")
+
+    if proj_name ~= nil and proj_name ~= "" then
+        name = proj_name
+    end
+
+    -- assert both name and path are correct
+    if name == nil or name == "" or path == nil or path == "" then return end
+
+    add_project(name, path)
+
+    print("\nProject '" .. name .. "' added succesfully")
 end
 
 vim.api.nvim_command('command! PickAProject lua require("pickaproject").start()')
 vim.api.nvim_command('command! NewProject lua require("pickaproject").new_project()')
+vim.api.nvim_command('command! -nargs=? NewProjectCwd lua require("pickaproject").new_project_cwd(<f-args>)')
 
 return M

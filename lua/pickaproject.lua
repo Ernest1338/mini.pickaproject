@@ -138,9 +138,13 @@ function M.new_project_cwd(proj_name)
     print("\nProject '" .. name .. "' added succesfully")
 end
 
--- NOTE: Maybe it's better to put them somewhere else? For example in a setup function?
-vim.api.nvim_command('command! PickAProject lua require("pickaproject").start()')
-vim.api.nvim_command('command! NewProject lua require("pickaproject").new_project()')
-vim.api.nvim_command('command! -nargs=? NewProjectCwd lua require("pickaproject").new_project_cwd(<f-args>)')
+function M.setup(opts)
+    -- NOTE: maybe add some configuration options?
+    M.opts = opts
+
+    vim.api.nvim_command('command! PickAProject lua require("pickaproject").start()')
+    vim.api.nvim_command('command! NewProject lua require("pickaproject").new_project()')
+    vim.api.nvim_command('command! -nargs=? NewProjectCwd lua require("pickaproject").new_project_cwd(<f-args>)')
+end
 
 return M

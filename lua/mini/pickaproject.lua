@@ -142,9 +142,9 @@ function M.setup(opts)
     -- NOTE: maybe add some configuration options?
     M.opts = opts
 
-    vim.api.nvim_command('command! PickAProject lua require("pickaproject").start()')
-    vim.api.nvim_command('command! NewProject lua require("pickaproject").new_project()')
-    vim.api.nvim_command('command! -nargs=? NewProjectCwd lua require("pickaproject").new_project_cwd(<f-args>)')
+    vim.api.nvim_command('command! PickAProject lua require("mini.pickaproject").start()')
+    vim.api.nvim_command('command! NewProject lua require("mini.pickaproject").new_project()')
+    vim.api.nvim_command('command! -nargs=? NewProjectCwd lua require("mini.pickaproject").new_project_cwd(<f-args>)')
 end
 
 return M

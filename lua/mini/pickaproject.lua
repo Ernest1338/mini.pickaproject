@@ -15,6 +15,10 @@ local function string_split(string, delimiter)
     return result
 end
 
+local function string_trim(str)
+    return str:match("^%s*(.-)%s*$")
+end
+
 local function parse_file(file)
     local flines = {}
     for line in file:lines() do
@@ -36,7 +40,7 @@ local function parse_file(file)
                 local ident_data_split = string_split(line, ":")
                 local identifier = ident_data_split[1]
                 local data = ident_data_split[2]
-                identifier = identifier:gsub("%s+", "")
+                identifier = string_trim(identifier)
                 if data ~= "" then
                     block_data[identifier] = { type = "project", data = data }
                 else
@@ -87,7 +91,11 @@ function M.start()
         local project = items[nth]
         if project["type"] == "project" then
             local path = project["data"]
-            vim.cmd("cd " .. path)
+            local ok, _ = pcall(vim.cmd, "cd " .. path)
+            if not ok then
+                vim.notify("ERROR: Directory \"" .. path .. "\" doesn't exist", vim.log.levels.ERROR)
+                return
+            end
             M.pick.builtin.files()
         elseif project["type"] == "nest" then
             names, items = parse_items(project["data"])

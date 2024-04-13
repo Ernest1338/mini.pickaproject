@@ -1,7 +1,6 @@
 local M = {}
 
--- mini.pick needs to be installed
-M.pick = require("mini.pick")
+-- NOTE: mini.pick needs to be installed and available
 
 M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
 
@@ -96,17 +95,23 @@ function M.start()
                 vim.notify("ERROR: Directory \"" .. path .. "\" doesn't exist", vim.log.levels.ERROR)
                 return
             end
-            M.pick.builtin.files()
+            _G.MiniPick.builtin.files()
         elseif project["type"] == "nest" then
             names, items = parse_items(project["data"])
-            M.pick.ui_select(names, {}, M.pick_handler)
+            _G.MiniPick.ui_select(names, {}, M.pick_handler)
         end
     end
 
-    M.pick.ui_select(names, {}, M.pick_handler)
+    _G.MiniPick.ui_select(names, {}, M.pick_handler)
 end
 
 local function add_project(name, path)
+    -- assert both name and path are correct
+    if name == nil or name == "" or path == nil or path == "" then
+        print("\nFailed to add a project. Incorrect values provided")
+        return
+    end
+
     local projects_file = io.open(M.projects_file_path, "a")
     if projects_file == nil then
         -- create the file if it doesn't exist
@@ -116,46 +121,38 @@ local function add_project(name, path)
 
     assert(projects_file):write(name .. ":" .. path .. "\n")
     assert(projects_file):close()
+
+    print("\nProject '" .. name .. "' added succesfully")
 end
 
 function M.new_project()
     local name = vim.fn.input("Project name: ")
-    if name == "" then return end
-
-    local path = vim.fn.input("Project path: ")
-    if path == "" then return end
-
+    local path = vim.fn.input("Project path (Current working directory if empty): ")
+    if path == "" then path = vim.fn.getcwd() end
     add_project(name, path)
-
-    print("\nProject '" .. name .. "' added succesfully")
 end
 
 function M.new_project_cwd(proj_name)
     local path = vim.fn.getcwd()
     local name = path:match("([^/]+)$")
-
-    if proj_name ~= nil and proj_name ~= "" then
-        name = proj_name
-    end
-
-    -- assert both name and path are correct
-    if name == nil or name == "" or path == nil or path == "" then return end
-
+    if proj_name ~= nil and proj_name ~= "" then name = proj_name end
     add_project(name, path)
-
-    print("\nProject '" .. name .. "' added succesfully")
 end
 
 function M.setup(opts)
     -- NOTE: maybe add some configuration options?
     M.opts = opts
+end
 
-    vim.api.nvim_create_user_command("PickAProject", function()
-        M.start()
-    end, {})
-    vim.api.nvim_create_user_command("NewProject", function()
-        M.new_project()
-    end, {})
+-- Register in 'mini.pick'
+if type(_G.MiniPick) == 'table' then
+    -- NOTE: replaced by :Pick project
+    -- vim.api.nvim_create_user_command("PickAProject", function()
+    --     M.start()
+    -- end, {})
+    _G.MiniPick.registry["project"] = M.start
+
+    vim.api.nvim_create_user_command("NewProject", function() M.new_project() end, {})
     vim.api.nvim_create_user_command("NewProjectCwd", function(input)
         local option = input.args
         if #option == 0 then option = nil end

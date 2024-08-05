@@ -1,8 +1,6 @@
-local M = {}
-
 -- NOTE: mini.pick needs to be installed and available
 
-M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
+local M = {}
 
 local function string_split(string, delimiter)
     local result = {}
@@ -95,14 +93,14 @@ function M.start()
                 vim.notify("ERROR: Directory \"" .. path .. "\" doesn't exist", vim.log.levels.ERROR)
                 return
             end
-            _G.MiniPick.builtin.files()
+            M.pick.builtin.files()
         elseif project["type"] == "nest" then
             names, items = parse_items(project["data"])
-            _G.MiniPick.ui_select(names, {}, M.pick_handler)
+            M.pick.ui_select(names, {}, M.pick_handler)
         end
     end
 
-    _G.MiniPick.ui_select(names, {}, M.pick_handler)
+    M.pick.ui_select(names, {}, M.pick_handler)
 end
 
 local function add_project(name, path)
@@ -142,22 +140,25 @@ end
 function M.setup(opts)
     -- NOTE: maybe add some configuration options?
     M.opts = opts
-end
 
--- Register in 'mini.pick'
-if type(_G.MiniPick) == 'table' then
-    -- NOTE: replaced by :Pick project
-    -- vim.api.nvim_create_user_command("PickAProject", function()
-    --     M.start()
-    -- end, {})
-    _G.MiniPick.registry["project"] = M.start
+    M.pick = _G.MiniPick
+    M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
 
-    vim.api.nvim_create_user_command("NewProject", function() M.new_project() end, {})
-    vim.api.nvim_create_user_command("NewProjectCwd", function(input)
-        local option = input.args
-        if #option == 0 then option = nil end
-        M.new_project_cwd(option)
-    end, { force = true, nargs = "*" })
+    -- Register in 'mini.pick'
+    if type(M.pick) == 'table' then
+        -- NOTE: replaced by :Pick project
+        -- vim.api.nvim_create_user_command("PickAProject", function()
+        --     M.start()
+        -- end, {})
+        M.pick.registry["project"] = M.start
+
+        vim.api.nvim_create_user_command("NewProject", function() M.new_project() end, {})
+        vim.api.nvim_create_user_command("NewProjectCwd", function(input)
+            local option = input.args
+            if #option == 0 then option = nil end
+            M.new_project_cwd(option)
+        end, { force = true, nargs = "*" })
+    end
 end
 
 return M

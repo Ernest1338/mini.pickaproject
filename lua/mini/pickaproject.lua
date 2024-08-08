@@ -81,6 +81,7 @@ function M.start()
 
     local parsed = parse_file(assert(projects_file))
     local names, items = parse_items(parsed)
+    local opts = { prompt = "Pick A Project" }
 
     M.pick_handler = function(_, nth)
         if nth == nil then return end
@@ -96,11 +97,11 @@ function M.start()
             M.pick.builtin.files()
         elseif project["type"] == "nest" then
             names, items = parse_items(project["data"])
-            M.pick.ui_select(names, {}, M.pick_handler)
+            M.pick.ui_select(names, opts, M.pick_handler)
         end
     end
 
-    M.pick.ui_select(names, {}, M.pick_handler)
+    M.pick.ui_select(names, opts, M.pick_handler)
 end
 
 local function add_project(name, path)

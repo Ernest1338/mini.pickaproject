@@ -138,26 +138,32 @@ function M.new_project_cwd(proj_name)
     add_project(name, path)
 end
 
-M.pick = _G.MiniPick
-M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
+function M.setup(opts)
+    -- NOTE: maybe add some configuration options? project file path?
+    M.opts = opts
 
-if type(M.pick) == 'table' then
-    -- Register in 'mini.pick'
-    M.pick.registry["project"] = M.start
+    M.pick = _G.MiniPick
+    M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
 
-    vim.api.nvim_create_user_command("EditProjects", function()
-        vim.cmd("edit " .. M.projects_file_path)
-    end, {})
-    vim.api.nvim_create_user_command("NewProject", function()
-        M.new_project()
-    end, {})
-    vim.api.nvim_create_user_command("NewProjectCwd", function(input)
-        local option = input.args
-        if #option == 0 then option = nil end
-        M.new_project_cwd(option)
-    end, { force = true, nargs = "*" })
-else
-    print("ERROR (mini.pickaproject): mini.pick not installed but is required")
+    if type(M.pick) == 'table' then
+        if M.pick.registry["project"] ~= nil then return end
+        -- Register in 'mini.pick'
+        M.pick.registry["project"] = M.start
+
+        vim.api.nvim_create_user_command("EditProjects", function()
+            vim.cmd("edit " .. M.projects_file_path)
+        end, {})
+        vim.api.nvim_create_user_command("NewProject", function()
+            M.new_project()
+        end, {})
+        vim.api.nvim_create_user_command("NewProjectCwd", function(input)
+            local option = input.args
+            if #option == 0 then option = nil end
+            M.new_project_cwd(option)
+        end, { force = true, nargs = "*" })
+    else
+        print("ERROR (mini.pickaproject): mini.pick not installed but is required")
+    end
 end
 
 return M

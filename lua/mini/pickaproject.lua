@@ -1,6 +1,7 @@
 -- NOTE: mini.pick needs to be installed and available
 
 local M = {}
+M.travel_stack = {}
 
 local function string_split(string, delimiter)
     local result = {}
@@ -87,16 +88,33 @@ function M.start()
         if nth == nil then return end
 
         local project = items[nth]
-        if project["type"] == "project" then
+        if project == "up" then
+            local val = table.remove(M.travel_stack)
+
+            names = val.names
+            items = val.items
+
+            M.pick.ui_select(names, opts, M.pick_handler)
+        elseif project["type"] == "project" then
             local path = project["data"]
-            local ok, _ = pcall(vim.cmd, "cd " .. path)
+            local ok, _ = pcall(function() vim.cmd("cd " .. path) end)
+
             if not ok then
                 vim.notify("ERROR: Directory \"" .. path .. "\" doesn't exist", vim.log.levels.ERROR)
                 return
             end
+
             M.pick.builtin.files()
         elseif project["type"] == "nest" then
+            table.insert(M.travel_stack, { names = names, items = items })
+
             names, items = parse_items(project["data"])
+
+            if #M.travel_stack > 0 then
+                table.insert(names, 1, "⤴ ..")
+                table.insert(items, 1, "up")
+            end
+
             M.pick.ui_select(names, opts, M.pick_handler)
         end
     end

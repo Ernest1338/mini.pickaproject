@@ -6,6 +6,14 @@
 
 ### NOTE: [mini.pick](https://github.com/echasnovski/mini.pick) needs to be installed and avaiable for this plugin to work
 
+## Setup
+```lua
+require("mini.pickaproject").setup({
+    -- optional configuration options (set by default)
+    projects_file = vim.fn.stdpath("data") .. "/projects.txt"
+})
+```
+
 # Example projects.txt file
 ```plain
 project1:/path/to/project1

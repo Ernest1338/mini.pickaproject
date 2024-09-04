@@ -73,11 +73,11 @@ local function parse_items(parsed)
 end
 
 function M.start()
-    local projects_file = io.open(M.projects_file_path)
+    local projects_file = io.open(M.opts.projects_file)
     if projects_file == nil then
         -- create the file if it doesn't exist
-        assert(io.open(M.projects_file_path, "w")):close()
-        projects_file = io.open(M.projects_file_path)
+        assert(io.open(M.opts.projects_file, "w")):close()
+        projects_file = io.open(M.opts.projects_file)
     end
 
     local parsed = parse_file(assert(projects_file))
@@ -129,11 +129,11 @@ local function add_project(name, path)
         return
     end
 
-    local projects_file = io.open(M.projects_file_path, "a")
+    local projects_file = io.open(M.opts.projects_file, "a")
     if projects_file == nil then
         -- create the file if it doesn't exist
-        assert(io.open(M.projects_file_path, "w")):close()
-        projects_file = io.open(M.projects_file_path)
+        assert(io.open(M.opts.projects_file, "w")):close()
+        projects_file = io.open(M.opts.projects_file)
     end
 
     assert(projects_file):write(name .. ":" .. path .. "\n")
@@ -161,15 +161,19 @@ function M.setup(opts)
     M.opts = opts
 
     M.pick = _G.MiniPick
-    M.projects_file_path = vim.fn.stdpath("data") .. "/projects.txt"
+
+    if M.opts.projects_file == nil then
+        M.opts.projects_file = vim.fn.stdpath("data") .. "/projects.txt"
+    end
 
     if type(M.pick) == 'table' then
         if M.pick.registry["project"] ~= nil then return end
         -- Register in 'mini.pick'
         M.pick.registry["project"] = M.start
 
+        if M.opts.no_user_commands ~= nil then return end
         vim.api.nvim_create_user_command("EditProjects", function()
-            vim.cmd("edit " .. M.projects_file_path)
+            vim.cmd("edit " .. M.opts.projects_file)
         end, {})
         vim.api.nvim_create_user_command("NewProject", function()
             M.new_project()

@@ -158,7 +158,7 @@ end
 
 function M.setup(opts)
     -- NOTE: maybe add some configuration options? project file path?
-    M.opts = opts
+    M.opts = opts or {}
 
     M.pick = _G.MiniPick
 
